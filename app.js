@@ -7,6 +7,8 @@ const adminRoutes = require('./api/routes/admin');
 const userRoutes = require('./api/routes/user');
 const schemeRoutes = require('./api/routes/scheme');
 const Scheme = require('./api/models/scheme');
+const subscribeRoutes = require('./api/routes/subscribe');
+const Subscribe = require('./api/models/subscribe');
 
 // //for mongoose
 // const uri = `mongodb://rest-shop-api:${process.env.MONGODB_PWD}@ds257981.mlab.com:57981/rest-shop-api`;
@@ -55,6 +57,7 @@ app.use((req, res, next) => {
 app.use('/admin', adminRoutes);
 app.use('/user', userRoutes);
 app.use('/scheme', schemeRoutes);
+app.use('/subscribe', subscribeRoutes);
 app.use('/tab-panel', (req, res, next) => {
     Scheme.find()
         .select('_id description')
@@ -65,13 +68,31 @@ app.use('/tab-panel', (req, res, next) => {
                 count: schemes.length,
                 schemes: schemes.map(scheme => {
                     return {
-                        _id: `Scheme ${ctr++}`,
+                        _id: scheme._id,
+                        vid: `Scheme ${ctr++}`,
                         description: scheme.description
                     }
                 })
             }
-            console.log(response);
-            res.render('tab-panel', {response: response});
+            Subscribe.find()
+                .select('uid sid')
+                .exec()
+                .then(subscribes => {
+                    const sub = {
+                        data: subscribes.map(ssub => {
+                            return {
+                                uid: ssub.uid,
+                                sid: ssub.sid
+                            }
+                        })
+                    }
+                    console.log(response);
+                    res.render('tab-panel', { response: response, sub: sub });
+                })
+                .catch(err => {
+                    console.log(err);
+                    res.status(500).json({ error: err })
+                })
         })
         .catch(err => {
             console.log(err);
