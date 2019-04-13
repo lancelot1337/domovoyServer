@@ -4,7 +4,7 @@ const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const adminRoutes = require('./api/routes/admin');
-// const schemeRoutes = require('./api/routes/schemes');
+const schemeRoutes = require('./api/routes/schemes');
 
 // //for mongoose
 // const uri = `mongodb://rest-shop-api:${process.env.MONGODB_PWD}@ds257981.mlab.com:57981/rest-shop-api`;
@@ -53,11 +53,12 @@ app.use((req, res, next) => {
 // app.use('/orders', orderRoutes);
 // app.use('/user', userRoutes);
 app.use('/admin', adminRoutes);
+app.use('/scheme', schemeRoutes);
 app.use('/', (req, res, next) => {
     res.redirect('/admin');
 });
 
-// app.use('/scheme', schemeRoutes);
+
 
 //for error handling
 app.use((req, res, next) => {
