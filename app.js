@@ -3,6 +3,8 @@ const app = express();
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const adminRoutes = require('./api/routes/admin');
+// const schemeRoutes = require('./api/routes/schemes');
 
 // //for mongoose
 // const uri = `mongodb://rest-shop-api:${process.env.MONGODB_PWD}@ds257981.mlab.com:57981/rest-shop-api`;
@@ -14,16 +16,17 @@ const mongoose = require('mongoose');
 //         console.log(`DB failed to connect, error: ${err}`);
 //     });
 
-// // mongoose.connect('mongodb://localhost/node-rest-shop').then(()=>{
-// // 	console.log('db connect');
-// // },(e)=>{
-// // 	console.log('error:'+ e)
-// // });
+mongoose.connect('mongodb://localhost/domovoy').then(() => {
+    console.log('db connect');
+}, (e) => {
+    console.log('error:' + e)
+});
 
-// mongoose.Promise = global.Promise;
+mongoose.Promise = global.Promise;
 
 //for logging
 app.use(morgan('dev'));
+app.use(express.static('public'));
 
 // //making uploads statically available
 // app.use('/uploads', express.static('uploads'));
@@ -49,11 +52,12 @@ app.use((req, res, next) => {
 // app.use('/products', productRoutes);
 // app.use('/orders', orderRoutes);
 // app.use('/user', userRoutes);
+app.use('/admin', adminRoutes);
 app.use('/', (req, res, next) => {
-    res.json({
-        message: "OK"
-    });
+    res.redirect('/admin');
 });
+
+// app.use('/scheme', schemeRoutes);
 
 //for error handling
 app.use((req, res, next) => {
