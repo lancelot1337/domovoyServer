@@ -4,7 +4,9 @@ const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const adminRoutes = require('./api/routes/admin');
-const schemeRoutes = require('./api/routes/schemes');
+const userRoutes = require('./api/routes/user');
+const schemeRoutes = require('./api/routes/scheme');
+const Scheme = require('./api/models/scheme');
 
 // //for mongoose
 // const uri = `mongodb://rest-shop-api:${process.env.MONGODB_PWD}@ds257981.mlab.com:57981/rest-shop-api`;
@@ -27,6 +29,7 @@ mongoose.Promise = global.Promise;
 //for logging
 app.use(morgan('dev'));
 app.use(express.static('public'));
+app.set('view engine', 'ejs');
 
 // //making uploads statically available
 // app.use('/uploads', express.static('uploads'));
@@ -48,12 +51,34 @@ app.use((req, res, next) => {
     next();
 });
 
-// //routes to productRoutes
-// app.use('/products', productRoutes);
-// app.use('/orders', orderRoutes);
-// app.use('/user', userRoutes);
+//routes
 app.use('/admin', adminRoutes);
+app.use('/user', userRoutes);
 app.use('/scheme', schemeRoutes);
+app.use('/tab-panel', (req, res, next) => {
+    Scheme.find()
+        .select('_id description')
+        .exec()
+        .then(schemes => {
+            let ctr = 1;
+            const response = {
+                count: schemes.length,
+                schemes: schemes.map(scheme => {
+                    return {
+                        _id: `Scheme ${ctr++}`,
+                        description: scheme.description
+                    }
+                })
+            }
+            console.log(response);
+            res.render('tab-panel', {response: response});
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({ error: err });
+        });
+
+})
 app.use('/', (req, res, next) => {
     res.redirect('/admin');
 });
