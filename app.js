@@ -7,8 +7,10 @@ const adminRoutes = require('./api/routes/admin');
 const userRoutes = require('./api/routes/user');
 const schemeRoutes = require('./api/routes/scheme');
 const Scheme = require('./api/models/scheme');
+const Alert = require('./api/models/alert');
 const subscribeRoutes = require('./api/routes/subscribe');
 const Subscribe = require('./api/models/subscribe');
+const AlertRoutes = require('./api/routes/alert');
 
 // //for mongoose
 // const uri = `mongodb://rest-shop-api:${process.env.MONGODB_PWD}@ds257981.mlab.com:57981/rest-shop-api`;
@@ -53,11 +55,32 @@ app.use((req, res, next) => {
     next();
 });
 
+var rating = [];
+
 //routes
 app.use('/admin', adminRoutes);
-app.use('/user', userRoutes);
+app.use('/user', (req, res, next) => {
+    Alert.find()
+    .exec()
+    .then(alerts => {
+        const response = {
+            count: alerts.length,
+            alertS: alerts.map(alert => {
+                return {
+                    _id: alert._id,
+                    machineID: alert.machineID,
+                    result: alert.result,
+                    probability: alert.probability
+                }
+            })
+        }
+        res.render(`user_index`, {response: response})
+    })
+});
+
 app.use('/scheme', schemeRoutes);
 app.use('/subscribe', subscribeRoutes);
+app.use('/alert', AlertRoutes);
 app.use('/tab-panel', (req, res, next) => {
     Scheme.find()
         .select('_id description')
@@ -86,8 +109,54 @@ app.use('/tab-panel', (req, res, next) => {
                             }
                         })
                     }
-                    console.log(response);
-                    res.render('tab-panel', { response: response, sub: sub });
+
+                    Subscribe.distinct('uid').exec((err, count) => {
+                        const usercount = count.length;
+                        const schemeCount = response.schemes.length;
+                        const subINFO = {
+                            usercount: usercount,
+                            schemeCount: schemeCount
+                        }
+
+
+                        // for (let index = 0; index < usercount; index++) {
+                        //     let temp = [];
+                        //     for (let j = 0; j < schemeCount; j++) {
+                        //         temp.push(0);
+                        //     }
+                        //     rating.push(temp);
+                        // }
+                        // for (let i = 0; i < schemeCount; i++) {
+                        //     const element = response.schemes[i]._id;
+                        //     // console.log(`THIS: ${element}`)
+                        //     for (let j = 0; j < usercount; j++) {
+                        //         Subscribe.find()
+                        //             .select(`uid sid`)
+                        //             .then(users => {
+                        //                 users.map(user => {
+                        //                     if (user.uid == j + 1) {
+                        //                         console.log(user.sid)
+
+                        //                         if (user.sid == element) {
+                        //                             ++rating[j][i]
+                        //                             console.log(rating[j][i])
+                        //                         }
+                        //                     }
+                        //                 })
+                        //             })
+                        //             .catch(err => {
+                        //                 res.status(500).json({ error: err })
+                        //             })
+
+                        //     }
+
+                        // }
+
+
+                        console.log(rating);
+                        res.render('tab-panel', { response: response, sub: sub, subINFO: subINFO });
+                    });
+
                 })
                 .catch(err => {
                     console.log(err);
